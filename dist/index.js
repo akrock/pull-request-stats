@@ -3600,7 +3600,12 @@ const getFilteredReviews = (data) => get(data, 'node.reviews.nodes', []).filter(
 module.exports = (data = {}) => {
   const author = parseUser(get(data, 'node.author'));
   const publishedAt = new Date(get(data, 'node.publishedAt'));
+  const closedAt = get(data, 'node.closedAt') ? new Date(get(data, 'node.closedAt')) : null;
+  const mergedAt = get(data, 'node.mergedAt') ? new Date(get(data, 'node.mergedAt')) : null;
   const handleReviews = (review) => parseReview(review, { publishedAt, authorLogin: author.login });
+  const handleRequestedReview = (requested) => parseUser(get(requested, 'node.requestedReviewer'));
+
+  const requestedReviewers = get(data, 'node.reviewRequests.node', []).map(handleRequestedReview);
 
   return {
     author,
@@ -3608,6 +3613,7 @@ module.exports = (data = {}) => {
     cursor: data.cursor,
     id: get(data, 'node.id'),
     reviews: getFilteredReviews(data).map(handleReviews),
+    ignored_by: requestedReviewers
   };
 };
 
@@ -9477,7 +9483,7 @@ const ownerFilter = ({ org, repos }) => {
 
 const buildQuery = ({ org, repos, startDate }) => {
   const dateFilter = `created:>=${startDate.toISOString()}`;
-  return `type:pr -review:none sort:author-date ${ownerFilter({ org, repos })} ${dateFilter}`;
+  return `type:pr sort:author-date ${ownerFilter({ org, repos })} ${dateFilter}`;
 };
 
 const getPullRequests = async (params) => {
@@ -9486,6 +9492,8 @@ const getPullRequests = async (params) => {
   const results = data.search.edges
     .filter(filterNullAuthor)
     .map(parsePullRequest);
+
+  
 
   if (results.length < limit) return results;
 
@@ -9519,6 +9527,8 @@ query($search: String!, $limit: Int!, $after: String) {
         ... on PullRequest {
           id
           publishedAt
+          closedAt
+          mergedAt
           author { ...ActorFragment }
           reviews(first: 100) {
             nodes {
@@ -9527,6 +9537,13 @@ query($search: String!, $limit: Int!, $after: String) {
               commit { pushedDate }
               comments { totalCount }
               author { ...ActorFragment }
+            }
+          }
+          reviewRequests(first:100) {
+            nodes {
+              requestedReviewer {
+                ...ActorFragment
+              }
             }
           }
         }
@@ -9761,8 +9778,10 @@ const run = async (params) => {
   core.info(`Found ${pulls.length} pull requests to analyze`);
 
   const reviewers = getReviewers(pulls);
-  core.info(`Analyzed stats for ${reviewers.length} pull request reviewers`);
+  const found_ignored_by = pulls.filter(f => f.ignored_by && f.ignored_by.length > 0).length;
 
+  core.info(`Analyzed stats for ${reviewers.length} pull request reviewers`);
+  core.info(`Found IgnoredBy on ${found_ignored_by}.`);
   const table = buildTable(reviewers, {
     limit,
     sortBy,
