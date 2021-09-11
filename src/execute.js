@@ -43,8 +43,10 @@ const run = async (params) => {
   core.info(`Found ${pulls.length} pull requests to analyze`);
 
   const reviewers = getReviewers(pulls);
-  core.info(`Analyzed stats for ${reviewers.length} pull request reviewers`);
+  const found_ignored_by = pulls.filter(f => f.ignored_by && f.ignored_by.length > 0).length;
 
+  core.info(`Analyzed stats for ${reviewers.length} pull request reviewers`);
+  core.info(`Found IgnoredBy on ${found_ignored_by}.`);
   const table = buildTable(reviewers, {
     limit,
     sortBy,

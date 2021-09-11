@@ -7,6 +7,8 @@ query($search: String!, $limit: Int!, $after: String) {
         ... on PullRequest {
           id
           publishedAt
+          closedAt
+          mergedAt
           author { ...ActorFragment }
           reviews(first: 100) {
             nodes {
@@ -15,6 +17,13 @@ query($search: String!, $limit: Int!, $after: String) {
               commit { pushedDate }
               comments { totalCount }
               author { ...ActorFragment }
+            }
+          }
+          reviewRequests(first:100) {
+            nodes {
+              requestedReviewer {
+                ...ActorFragment
+              }
             }
           }
         }

@@ -10,7 +10,7 @@ const ownerFilter = ({ org, repos }) => {
 
 const buildQuery = ({ org, repos, startDate }) => {
   const dateFilter = `created:>=${startDate.toISOString()}`;
-  return `type:pr -review:none sort:author-date ${ownerFilter({ org, repos })} ${dateFilter}`;
+  return `type:pr sort:author-date ${ownerFilter({ org, repos })} ${dateFilter}`;
 };
 
 const getPullRequests = async (params) => {
@@ -19,6 +19,8 @@ const getPullRequests = async (params) => {
   const results = data.search.edges
     .filter(filterNullAuthor)
     .map(parsePullRequest);
+
+  
 
   if (results.length < limit) return results;
 

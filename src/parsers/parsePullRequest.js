@@ -9,7 +9,12 @@ const getFilteredReviews = (data) => get(data, 'node.reviews.nodes', []).filter(
 module.exports = (data = {}) => {
   const author = parseUser(get(data, 'node.author'));
   const publishedAt = new Date(get(data, 'node.publishedAt'));
+  const closedAt = get(data, 'node.closedAt') ? new Date(get(data, 'node.closedAt')) : null;
+  const mergedAt = get(data, 'node.mergedAt') ? new Date(get(data, 'node.mergedAt')) : null;
   const handleReviews = (review) => parseReview(review, { publishedAt, authorLogin: author.login });
+  const handleRequestedReview = (requested) => parseUser(get(requested, 'node.requestedReviewer'));
+
+  const requestedReviewers = get(data, 'node.reviewRequests.node', []).map(handleRequestedReview);
 
   return {
     author,
@@ -17,5 +22,6 @@ module.exports = (data = {}) => {
     cursor: data.cursor,
     id: get(data, 'node.id'),
     reviews: getFilteredReviews(data).map(handleReviews),
+    ignored_by: requestedReviewers
   };
 };
