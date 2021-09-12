@@ -3607,15 +3607,15 @@ module.exports = (data = {}) => {
   const handleReviews = (review) => parseReview(review, { publishedAt, authorLogin: author.login });
   const handleRequestedReview = (r) => {
     core.info(`r is: ${JSON.stringify(r, null, 2)}`);
-    let userData = get(r, 'node.requestedReviewer');
+    let userData = get(r, 'requestedReviewer');
     let removed = false;
     core.info(`requestedReviewer: ${JSON.stringify(userData, null, 2)}`);
     if(!userData) {
       removed = true;
-      userData = get(r, 'node.removedReviewer');
+      userData = get(r, 'removedReviewer');
       core.info(`removedReviewer: ${JSON.stringify(userData, null, 2)}`);
     }
-    let requestedAt = new Date(get(data, 'node.createdAt'));
+    let requestedAt = new Date(get(data, 'createdAt'));
     return { user: parseUser(userData), timeIgnored: (closedAt || mergedAt || now) - requestedAt, removed: true };
   }
 
