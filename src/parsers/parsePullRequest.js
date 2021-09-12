@@ -21,7 +21,7 @@ module.exports = (data = {}) => {
       removed = true;
       userData = get(r, 'removedReviewer');
     }
-    const requestedAt = new Date(get(data, 'createdAt'));
+    const requestedAt = new Date(get(r, 'createdAt'));
     const endDate = closedAt || mergedAt || now;
     core.info(`requestedAt: ${requestedAt} - endDate: ${endDate} (${closedAt} || ${mergedAt} || ${now})= ${endDate - requestedAt}`);
     return { user: parseUser(userData), timeIgnored: endDate - requestedAt, removed: removed };
