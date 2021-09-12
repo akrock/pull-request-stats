@@ -3600,10 +3600,11 @@ const getFilteredReviews = (data) => get(data, 'node.reviews.nodes', []).filter(
 module.exports = (data = {}) => {
   const author = parseUser(get(data, 'node.author'));
   const publishedAt = new Date(get(data, 'node.publishedAt'));
+  const now = new Date();
   const closedAt = get(data, 'node.closedAt') ? new Date(get(data, 'node.closedAt')) : null;
   const mergedAt = get(data, 'node.mergedAt') ? new Date(get(data, 'node.mergedAt')) : null;
   const handleReviews = (review) => parseReview(review, { publishedAt, authorLogin: author.login });
-  const handleRequestedReview = (r) => parseUser(get(r, 'node.requestedReviewer'));
+  const handleRequestedReview = (r) => new { user: parseUser(get(r, 'node.requestedReviewer')), timeIgnored: publishedAt - (closedAt || mergedAt || now) };
 
   const requestedReviewers = get(data, 'node.reviewRequests.nodes', []).map(handleRequestedReview);
 
@@ -3613,7 +3614,7 @@ module.exports = (data = {}) => {
     cursor: data.cursor,
     id: get(data, 'node.id'),
     reviews: getFilteredReviews(data).map(handleReviews),
-    ignored_by: requestedReviewers
+    ignoredBy: requestedReviewers
   };
 };
 
@@ -9778,7 +9779,7 @@ const run = async (params) => {
   core.info(`Found ${pulls.length} pull requests to analyze`);
 
   const reviewers = getReviewers(pulls);
-  core.info(`Found ${JSON.stringify(pulls)}`);
+  core.info(`2: Found ${JSON.stringify(pulls)}`);
   const found_ignored_by = pulls.filter(f => f.ignored_by && f.ignored_by.length > 0).length;
 
   core.info(`Analyzed stats for ${reviewers.length} pull request reviewers`);
