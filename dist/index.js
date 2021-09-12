@@ -3605,7 +3605,7 @@ const requestedReviewsByAuthor = (requestedReviewers) => requestedReviewers.redu
   if (!acc[key]) {
     const timeArray = [];
     timeArray.push(time);
-    acc[key] = { user, timeIgnored, requested: removed ? [] : timeArray, removed: removed ? timeArray : [] };
+    acc[key] = { user, requested: removed ? [] : timeArray, removed: removed ? timeArray : [] };
   } else {
     const prevValue = acc[key];
     const requestedArray = prevValue.requested;
