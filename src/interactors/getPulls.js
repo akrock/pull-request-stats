@@ -17,7 +17,7 @@ const buildQuery = ({ org, repos, startDate }) => {
 const getPullRequests = async (params) => {
   const { limit } = params;
   const data = await fetchPullRequests(params);
-  core.info(`Got response from graphQL: ${JSON.stringify(data, null, 2)}`)
+  //core.info(`Got response from graphQL: ${JSON.stringify(data, null, 2)}`)
   const results = data.search.edges
     .filter(filterNullAuthor)
     .map(parsePullRequest);

@@ -7,8 +7,8 @@ const filterNullAuthor = ({ author }) => !!author;
 
 const getFilteredReviews = (data) => get(data, 'node.reviews.nodes', []).filter(filterNullAuthor);
 
-const requestedReviewsByAuthor = (requestedReviewers) => requestedReviewers.reduce((acc, requested) => {
-  const { user, removed, time } = requested;
+const requestedReviewsByAuthor = (requestedReviewers) => requestedReviewers.reduce((acc, requestedReview) => {
+  const { user, removed, time } = requestedReview;
   const key = user.id;
 
   if (!acc[key]) {
@@ -34,8 +34,10 @@ const requestedReviewsByAuthor = (requestedReviewers) => requestedReviewers.redu
 const mergeReviewsWithRequested = (actualReviews, requestedReviewers) => {
   actualReviews = actualReviews || [];
   requestedReviewers = requestedReviewers || [];
-  
+
   const requestedByReviewer = requestedReviewsByAuthor(requestedReviewers);
+
+  core.info(`REDUCED REQUESTED: ${JSON.stringify(requestedByReviewer, null, 2)}`);
 
   const reviewsByAuthor = actualReviews.reduce((acc, review)  => {
     const { author, isOwnPull, submittedAt, commentsCount, ...other } = review;
@@ -74,7 +76,7 @@ const mergeReviewsWithRequested = (actualReviews, requestedReviewers) => {
     return acc;
   }, {});
 
-  core.info(`REDUCED REVIEWS: ${JSON.stringify(reviewsByAuthor, null, 2)}`)
+  core.info(`REDUCED REVIEWS: ${JSON.stringify(reviewsByAuthor, null, 2)}`);
 }
 
 module.exports = (data = {}) => {
