@@ -69,9 +69,8 @@ const mergeReviewsWithRequested = (actualReviews, requestedReviewers) => {
     }
 
     const existingArray = acc[key];
-    
-
-    let reviewToUpdate = existingArray.filter( r => r.requestedAt == requestedAt);
+    const matching = existingArray.filter( r => r.requestedAt == requestedAt);
+    let reviewToUpdate = matching.length < 1 ? null : matching[0];
     if(!reviewToUpdate) {
       reviewToUpdate = { author, isOwnPull, submittedAt, requestedAt, commentsCount }
       acc[key].push(reviewToUpdate);

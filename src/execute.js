@@ -44,7 +44,7 @@ const run = async (params) => {
   core.info(`Found ${pulls.length} pull requests to analyze`);
 
   const reviewers = getReviewers(pulls);
-  core.info(`3: Found ${JSON.stringify(pulls, null, 2)}`);
+  //core.info(`3: Found ${JSON.stringify(pulls, null, 2)}`);
   const found_ignored_by = pulls.filter(f => f.ignoredBy && f.ignoredBy.length > 0).length;
 
   core.info(`Analyzed stats for ${reviewers.length} pull request reviewers`);
