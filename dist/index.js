@@ -3603,9 +3603,9 @@ module.exports = (data = {}) => {
   const closedAt = get(data, 'node.closedAt') ? new Date(get(data, 'node.closedAt')) : null;
   const mergedAt = get(data, 'node.mergedAt') ? new Date(get(data, 'node.mergedAt')) : null;
   const handleReviews = (review) => parseReview(review, { publishedAt, authorLogin: author.login });
-  const handleRequestedReview = (requested) => parseUser(get(requested, 'node.requestedReviewer'));
+  const handleRequestedReview = (r) => parseUser(get(r, 'node.requestedReviewer'));
 
-  const requestedReviewers = get(data, 'node.reviewRequests.node', []).map(handleRequestedReview);
+  const requestedReviewers = get(data, 'node.reviewRequests.nodes', []).map(handleRequestedReview);
 
   return {
     author,
