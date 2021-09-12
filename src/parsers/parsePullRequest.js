@@ -44,9 +44,23 @@ const mergeReviewsWithRequested = (actualReviews, requestedReviewers) => {
     const key = author.id;
     
     var requestInfo = requestedByReviewer[key];
-    if(!requestInfo || submittedAt <= Math.min(requestInfo.requested)) {
+    if(!requestInfo) {
       // This was an unsolicited review...
       // should we count this?
+      return acc;
+    }
+
+    // which request should this be applied to?
+    const requestedAt = requestInfo.requested.reduce((outupt, t) => {
+      if(t <= submittedAt) {
+        return t;
+      }
+
+      return output;
+    }, null);
+
+    if(requestedAt == null) {
+      // This was an unrequested review...
       return acc;
     }
 
@@ -55,14 +69,7 @@ const mergeReviewsWithRequested = (actualReviews, requestedReviewers) => {
     }
 
     const existingArray = acc[key];
-    // which request should this be applied to?
-    const requestedAt = requestedByReviewer.requested.reduce((outupt, t) => {
-      if(t <= submittedAt) {
-        return t;
-      }
-
-      return output;
-    }, null);
+    
 
     let reviewToUpdate = existingArray.filter( r => r.requestedAt == requestedAt);
     if(!reviewToUpdate) {
