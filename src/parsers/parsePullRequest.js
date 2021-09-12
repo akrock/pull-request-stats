@@ -15,17 +15,16 @@ module.exports = (data = {}) => {
   const mergedAt = get(data, 'node.mergedAt') ? new Date(get(data, 'node.mergedAt')) : null;
   const handleReviews = (review) => parseReview(review, { publishedAt, authorLogin: author.login });
   const handleRequestedReview = (r) => {
-    core.info(`r is: ${JSON.stringify(r, null, 2)}`);
     let userData = get(r, 'requestedReviewer');
     let removed = false;
-    core.info(`requestedReviewer: ${JSON.stringify(userData, null, 2)}`);
     if(!userData) {
       removed = true;
       userData = get(r, 'removedReviewer');
-      core.info(`removedReviewer: ${JSON.stringify(userData, null, 2)}`);
     }
-    let requestedAt = new Date(get(data, 'createdAt'));
-    return { user: parseUser(userData), timeIgnored: (closedAt || mergedAt || now) - requestedAt, removed: true };
+    const requestedAt = new Date(get(data, 'createdAt'));
+    const endDate = closedAt || mergedAt || now;
+    core.info(`requestedAt: ${requestedAt} - endDate: ${endDate} (${closedAt} || ${mergedAt} || ${now})= ${endDate - requestedAt}`);
+    return { user: parseUser(userData), timeIgnored: endDate - requestedAt, removed: removed };
   }
 
   const requestedReviewers = get(data, 'node.timelineItems.nodes', []).map(handleRequestedReview);
