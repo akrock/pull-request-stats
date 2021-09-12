@@ -13,8 +13,9 @@ module.exports = (data = {}) => {
   const closedAt = get(data, 'node.closedAt') ? new Date(get(data, 'node.closedAt')) : null;
   const mergedAt = get(data, 'node.mergedAt') ? new Date(get(data, 'node.mergedAt')) : null;
   const handleReviews = (review) => parseReview(review, { publishedAt, authorLogin: author.login });
-  const handleRequestedReview = (r) => new { user: parseUser(get(r, 'node.requestedReviewer')), timeIgnored: publishedAt - (closedAt || mergedAt || now) };
-
+  const handleRequestedReview = (r) => {
+    return { user: parseUser(get(r, 'node.requestedReviewer')), timeIgnored: publishedAt - (closedAt || mergedAt || now) };
+  }
   const requestedReviewers = get(data, 'node.reviewRequests.nodes', []).map(handleRequestedReview);
 
   return {
