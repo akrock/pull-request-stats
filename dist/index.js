@@ -9783,10 +9783,11 @@ const run = async (params) => {
   const octokit = github.getOctokit(githubToken);
 
   const pullRequest = await getPullRequest({ octokit, pullRequestId });
-  if (alreadyPublished(pullRequest)) {
-    core.info('Skipping execution because stats are published already');
-    return false;
-  }
+  const alreadyPublished = alreadyPublished(pullRequest);
+  // if (alreadyPublished) {
+  //   core.info('Skipping execution because stats are published already');
+  //   return false;
+  // }
 
   const startDate = subtractDaysToDate(new Date(), periodLength);
   const pulls = await getPulls({
@@ -9811,6 +9812,12 @@ const run = async (params) => {
 
   const content = buildComment({ table, periodLength });
   core.debug(`Commit content built successfully: ${content}`);
+
+  //TODO: Moved this step to later to assist testing...
+  if (alreadyPublished) {
+    core.info('Skipping execution because stats are published already');
+    return false;
+  }
 
   await postComment({
     octokit,
