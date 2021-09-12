@@ -3623,6 +3623,9 @@ const requestedReviewsByAuthor = (requestedReviewers) => requestedReviewers.redu
 }, {});
 
 const mergeReviewsWithRequested = (actualReviews, requestedReviewers) => {
+  actualReviews = actualReviews || [];
+  requestedReviewers = requestedReviewers || [];
+  
   const requestedByReviewer = requestedReviewsByAuthor(requestedReviewers);
 
   const reviewsByAuthor = actualReviews.reduce((acc, review)  => {
