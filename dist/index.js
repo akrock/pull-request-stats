@@ -5774,6 +5774,7 @@ function escapeProperty(s) {
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const { fetchPullRequestById } = __webpack_require__(162);
+const core = __webpack_require__(470);
 
 const parsePullRequest = (data) => {
   const { node } = data;
@@ -5785,6 +5786,7 @@ const parsePullRequest = (data) => {
 
 module.exports = async ({ octokit, pullRequestId }) => {
   const data = await fetchPullRequestById(octokit, pullRequestId);
+  core.info(`Got response from graphQL: ${JSON.stringify(data, null, 2)}`)
   return parsePullRequest(data);
 };
 
@@ -9780,7 +9782,7 @@ const run = async (params) => {
   core.info(`Found ${pulls.length} pull requests to analyze`);
 
   const reviewers = getReviewers(pulls);
-  core.info(`2: Found ${JSON.stringify(pulls)}`);
+  core.info(`3: Found ${JSON.stringify(pulls, null, 2)}`);
   const found_ignored_by = pulls.filter(f => f.ignoredBy && f.ignoredBy.length > 0).length;
 
   core.info(`Analyzed stats for ${reviewers.length} pull request reviewers`);
