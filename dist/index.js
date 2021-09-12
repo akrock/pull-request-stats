@@ -9783,7 +9783,7 @@ const run = async (params) => {
   const octokit = github.getOctokit(githubToken);
 
   const pullRequest = await getPullRequest({ octokit, pullRequestId });
-  const alreadyPublished = alreadyPublished(pullRequest);
+  const isAlreadyPublished = alreadyPublished(pullRequest);
   // if (alreadyPublished) {
   //   core.info('Skipping execution because stats are published already');
   //   return false;
@@ -9814,7 +9814,7 @@ const run = async (params) => {
   core.debug(`Commit content built successfully: ${content}`);
 
   //TODO: Moved this step to later to assist testing...
-  if (alreadyPublished) {
+  if (isAlreadyPublished) {
     core.info('Skipping execution because stats are published already');
     return false;
   }
