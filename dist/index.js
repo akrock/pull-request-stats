@@ -1400,14 +1400,6 @@ module.exports = (reviewers, options = {}) => {
 
 /***/ }),
 
-/***/ 208:
-/***/ (function(module) {
-
-module.exports = eval("require")("lodash.");
-
-
-/***/ }),
-
 /***/ 211:
 /***/ (function(module) {
 
@@ -3598,7 +3590,6 @@ module.exports = {
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const get = __webpack_require__(854);
-const groupBy = __webpack_require__(208)
 const parseUser = __webpack_require__(359);
 const parseReview = __webpack_require__(158);
 const core = __webpack_require__(470);

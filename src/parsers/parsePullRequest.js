@@ -1,5 +1,4 @@
 const get = require('lodash.get');
-const groupBy = require('lodash.')
 const parseUser = require('./parseUser');
 const parseReview = require('./parseReview');
 const core = require('@actions/core');
