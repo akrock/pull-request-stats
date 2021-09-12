@@ -3642,7 +3642,7 @@ const mergeReviewsWithRequested = (actualReviews, requestedReviewers) => {
     }
 
     // which request should this be applied to?
-    const requestedAt = requestInfo.requested.reduce((outupt, t) => {
+    const requestedAt = requestInfo.requested.reduce((output, t) => {
       if(t <= submittedAt) {
         return t;
       }
