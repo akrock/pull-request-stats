@@ -1400,6 +1400,14 @@ module.exports = (reviewers, options = {}) => {
 
 /***/ }),
 
+/***/ 208:
+/***/ (function(module) {
+
+module.exports = eval("require")("lodash.");
+
+
+/***/ }),
+
 /***/ 211:
 /***/ (function(module) {
 
@@ -3590,6 +3598,7 @@ module.exports = {
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const get = __webpack_require__(854);
+const groupBy = __webpack_require__(208)
 const parseUser = __webpack_require__(359);
 const parseReview = __webpack_require__(158);
 const core = __webpack_require__(470);
@@ -3597,6 +3606,73 @@ const core = __webpack_require__(470);
 const filterNullAuthor = ({ author }) => !!author;
 
 const getFilteredReviews = (data) => get(data, 'node.reviews.nodes', []).filter(filterNullAuthor);
+
+const requestedReviewsByAuthor = (requestedReviewers) => requestedReviewers.reduce((acc, requested) => {
+  const { user, removed, time } = requested;
+  const key = user.id;
+
+  if (!acc[key]) {
+    const timeArray = [];
+    timeArray.push(time);
+    acc[key] = { user, timeIgnored, requested: removed ? [] : timeArray, removed: removed ? timeArray : [] };
+  } else {
+    const prevValue = acc[key];
+    const requestedArray = prevValue.requested;
+    const removedArray = prevValue.removed;
+
+    if(removed) {
+      removedArray.push(time);
+    } else {
+      requestedArray.push(time);
+    }
+
+    acc[key] = { user, requested: requestedArray, removed: removedArray};
+  }
+  return acc;
+}, {});
+
+const mergeReviewsWithRequested = (actualReviews, requestedReviewers) => {
+  const requestedByReviewer = requestedReviewsByAuthor(requestedReviewers);
+
+  const reviewsByAuthor = actualReviews.reduce((acc, review)  => {
+    const { author, isOwnPull, submittedAt, commentsCount, ...other } = review;
+    const key = author.id;
+    
+    var requestInfo = requestedByReviewer[key];
+    if(!requestInfo || submittedAt <= Math.min(requestInfo.requested)) {
+      // This was an unsolicited review...
+      // should we count this?
+      return acc;
+    }
+
+    if(!acc[key]) {
+      acc[key] = []
+    }
+
+    const existingArray = acc[key];
+    // which request should this be applied to?
+    const requestedAt = requestedByReviewer.requested.reduce((outupt, t) => {
+      if(t <= submittedAt) {
+        return t;
+      }
+
+      return output;
+    }, null);
+
+    let reviewToUpdate = existingArray.filter( r => r.requestedAt == requestedAt);
+    if(!reviewToUpdate) {
+      reviewToUpdate = { author, isOwnPull, submittedAt, requestedAt, commentsCount }
+      acc[key].push(reviewToUpdate);
+    }
+    else {
+      reviewToUpdate.commentsCount += commentsCount;
+    }
+
+    return acc;
+  }, {});
+
+  core.info(`REDUCED REVIEWS: ${JSON.stringify(reviewsByAuthor, null, 2)}`)
+}
 
 module.exports = (data = {}) => {
   const author = parseUser(get(data, 'node.author'));
@@ -3613,19 +3689,19 @@ module.exports = (data = {}) => {
       userData = get(r, 'removedReviewer');
     }
     const requestedAt = new Date(get(r, 'createdAt'));
-    const endDate = closedAt || mergedAt || now;
-    core.info(`requestedAt: ${requestedAt} - endDate: ${endDate} (${closedAt} || ${mergedAt} || ${now})= ${endDate - requestedAt}`);
-    return { user: parseUser(userData), timeIgnored: endDate - requestedAt, removed: removed };
+    return { user: parseUser(userData), removed, time: requestedAt };
   }
 
+  const actualReviews = getFilteredReviews(data).map(handleReviews);
   const requestedReviewers = get(data, 'node.timelineItems.nodes', []).map(handleRequestedReview);
+  const finalReviews = mergeReviewsWithRequested(actualReviews, requestedReviewers);
 
   return {
     author,
     publishedAt,
     cursor: data.cursor,
     id: get(data, 'node.id'),
-    reviews: getFilteredReviews(data).map(handleReviews),
+    reviews: actualReviews,
     ignoredBy: requestedReviewers
   };
 };
