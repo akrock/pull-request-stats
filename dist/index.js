@@ -5774,7 +5774,6 @@ function escapeProperty(s) {
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const { fetchPullRequestById } = __webpack_require__(162);
-const core = __webpack_require__(470);
 
 const parsePullRequest = (data) => {
   const { node } = data;
@@ -5786,7 +5785,6 @@ const parsePullRequest = (data) => {
 
 module.exports = async ({ octokit, pullRequestId }) => {
   const data = await fetchPullRequestById(octokit, pullRequestId);
-  core.info(`Got response from graphQL: ${JSON.stringify(data, null, 2)}`)
   return parsePullRequest(data);
 };
 
@@ -9477,6 +9475,7 @@ module.exports = ({
 
 const { fetchPullRequests } = __webpack_require__(162);
 const { parsePullRequest } = __webpack_require__(120);
+const core = __webpack_require__(470);
 
 const filterNullAuthor = ({ node }) => !!node.author;
 
@@ -9493,6 +9492,7 @@ const buildQuery = ({ org, repos, startDate }) => {
 const getPullRequests = async (params) => {
   const { limit } = params;
   const data = await fetchPullRequests(params);
+  core.info(`Got response from graphQL: ${JSON.stringify(data, null, 2)}`)
   const results = data.search.edges
     .filter(filterNullAuthor)
     .map(parsePullRequest);
