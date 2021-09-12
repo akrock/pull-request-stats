@@ -15,6 +15,7 @@ module.exports = (data = {}) => {
   const mergedAt = get(data, 'node.mergedAt') ? new Date(get(data, 'node.mergedAt')) : null;
   const handleReviews = (review) => parseReview(review, { publishedAt, authorLogin: author.login });
   const handleRequestedReview = (r) => {
+    core.info(`r is: ${JSON.stringify(r, null, 2)}`);
     let userData = get(r, 'node.requestedReviewer');
     let removed = false;
     core.info(`requestedReviewer: ${JSON.stringify(userData, null, 2)}`);

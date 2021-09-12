@@ -12,6 +12,15 @@ query ($search: String!, $limit: Int!, $after: String) {
           author {
             ...ActorFragment
           }
+          reviews(first: 100) {
+            nodes {
+              id
+              submittedAt
+              commit { pushedDate }
+              comments { totalCount }
+              author { ...ActorFragment }
+            }
+          }
           timelineItems(itemTypes: [REVIEW_REQUESTED_EVENT, REVIEW_REQUEST_REMOVED_EVENT], first: 250) {
             nodes {
               ... on ReviewRequestedEvent {

@@ -3606,6 +3606,7 @@ module.exports = (data = {}) => {
   const mergedAt = get(data, 'node.mergedAt') ? new Date(get(data, 'node.mergedAt')) : null;
   const handleReviews = (review) => parseReview(review, { publishedAt, authorLogin: author.login });
   const handleRequestedReview = (r) => {
+    core.info(`r is: ${JSON.stringify(r, null, 2)}`);
     let userData = get(r, 'node.requestedReviewer');
     let removed = false;
     core.info(`requestedReviewer: ${JSON.stringify(userData, null, 2)}`);
@@ -9546,6 +9547,15 @@ query ($search: String!, $limit: Int!, $after: String) {
           mergedAt
           author {
             ...ActorFragment
+          }
+          reviews(first: 100) {
+            nodes {
+              id
+              submittedAt
+              commit { pushedDate }
+              comments { totalCount }
+              author { ...ActorFragment }
+            }
           }
           timelineItems(itemTypes: [REVIEW_REQUESTED_EVENT, REVIEW_REQUEST_REMOVED_EVENT], first: 250) {
             nodes {
