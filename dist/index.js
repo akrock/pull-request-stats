@@ -3592,6 +3592,7 @@ module.exports = {
 const get = __webpack_require__(854);
 const parseUser = __webpack_require__(359);
 const parseReview = __webpack_require__(158);
+const core = __webpack_require__(470);
 
 const filterNullAuthor = ({ author }) => !!author;
 
@@ -3605,9 +3606,19 @@ module.exports = (data = {}) => {
   const mergedAt = get(data, 'node.mergedAt') ? new Date(get(data, 'node.mergedAt')) : null;
   const handleReviews = (review) => parseReview(review, { publishedAt, authorLogin: author.login });
   const handleRequestedReview = (r) => {
-    return { user: parseUser(get(r, 'node.requestedReviewer')), timeIgnored: publishedAt - (closedAt || mergedAt || now) };
+    let userData = get(r, 'node.requestedReviewer');
+    let removed = false;
+    core.info(`requestedReviewer: ${JSON.stringify(userData, null, 2)}`);
+    if(!userData) {
+      removed = true;
+      userData = get(r, 'node.removedReviewer');
+      core.info(`removedReviewer: ${JSON.stringify(userData, null, 2)}`);
+    }
+    let requestedAt = new Date(get(data, 'node.createdAt'));
+    return { user: parseUser(userData), timeIgnored: (closedAt || mergedAt || now) - requestedAt, removed: true };
   }
-  const requestedReviewers = get(data, 'node.reviewRequests.nodes', []).map(handleRequestedReview);
+
+  const requestedReviewers = get(data, 'node.timelineItems.nodes', []).map(handleRequestedReview);
 
   return {
     author,
@@ -9523,7 +9534,7 @@ module.exports = ({
 /***/ (function(module) {
 
 const PRS_QUERY = `
-query($search: String!, $limit: Int!, $after: String) {
+query ($search: String!, $limit: Int!, $after: String) {
   search(query: $search, first: $limit, after: $after, type: ISSUE) {
     edges {
       cursor
@@ -9533,20 +9544,22 @@ query($search: String!, $limit: Int!, $after: String) {
           publishedAt
           closedAt
           mergedAt
-          author { ...ActorFragment }
-          reviews(first: 100) {
-            nodes {
-              id
-              submittedAt
-              commit { pushedDate }
-              comments { totalCount }
-              author { ...ActorFragment }
-            }
+          author {
+            ...ActorFragment
           }
-          reviewRequests(first:100) {
+          timelineItems(itemTypes: [REVIEW_REQUESTED_EVENT, REVIEW_REQUEST_REMOVED_EVENT], first: 250) {
             nodes {
-              requestedReviewer {
-                ...ActorFragment
+              ... on ReviewRequestedEvent {
+                createdAt
+                requestedReviewer {
+                  ...ActorFragment
+                }
+              }
+              ... on ReviewRequestRemovedEvent {
+                createdAt
+                removedReviewer: requestedReviewer {
+                  ...ActorFragment
+                }
               }
             }
           }

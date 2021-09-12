@@ -1,6 +1,7 @@
 const get = require('lodash.get');
 const parseUser = require('./parseUser');
 const parseReview = require('./parseReview');
+const core = require('@actions/core');
 
 const filterNullAuthor = ({ author }) => !!author;
 
@@ -14,9 +15,19 @@ module.exports = (data = {}) => {
   const mergedAt = get(data, 'node.mergedAt') ? new Date(get(data, 'node.mergedAt')) : null;
   const handleReviews = (review) => parseReview(review, { publishedAt, authorLogin: author.login });
   const handleRequestedReview = (r) => {
-    return { user: parseUser(get(r, 'node.requestedReviewer')), timeIgnored: publishedAt - (closedAt || mergedAt || now) };
+    let userData = get(r, 'node.requestedReviewer');
+    let removed = false;
+    core.info(`requestedReviewer: ${JSON.stringify(userData, null, 2)}`);
+    if(!userData) {
+      removed = true;
+      userData = get(r, 'node.removedReviewer');
+      core.info(`removedReviewer: ${JSON.stringify(userData, null, 2)}`);
+    }
+    let requestedAt = new Date(get(data, 'node.createdAt'));
+    return { user: parseUser(userData), timeIgnored: (closedAt || mergedAt || now) - requestedAt, removed: true };
   }
-  const requestedReviewers = get(data, 'node.reviewRequests.nodes', []).map(handleRequestedReview);
+
+  const requestedReviewers = get(data, 'node.timelineItems.nodes', []).map(handleRequestedReview);
 
   return {
     author,

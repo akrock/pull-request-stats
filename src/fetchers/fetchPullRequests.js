@@ -1,5 +1,5 @@
 const PRS_QUERY = `
-query($search: String!, $limit: Int!, $after: String) {
+query ($search: String!, $limit: Int!, $after: String) {
   search(query: $search, first: $limit, after: $after, type: ISSUE) {
     edges {
       cursor
@@ -9,20 +9,22 @@ query($search: String!, $limit: Int!, $after: String) {
           publishedAt
           closedAt
           mergedAt
-          author { ...ActorFragment }
-          reviews(first: 100) {
-            nodes {
-              id
-              submittedAt
-              commit { pushedDate }
-              comments { totalCount }
-              author { ...ActorFragment }
-            }
+          author {
+            ...ActorFragment
           }
-          reviewRequests(first:100) {
+          timelineItems(itemTypes: [REVIEW_REQUESTED_EVENT, REVIEW_REQUEST_REMOVED_EVENT], first: 250) {
             nodes {
-              requestedReviewer {
-                ...ActorFragment
+              ... on ReviewRequestedEvent {
+                createdAt
+                requestedReviewer {
+                  ...ActorFragment
+                }
+              }
+              ... on ReviewRequestRemovedEvent {
+                createdAt
+                removedReviewer: requestedReviewer {
+                  ...ActorFragment
+                }
               }
             }
           }
