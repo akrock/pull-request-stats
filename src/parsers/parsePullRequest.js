@@ -41,7 +41,7 @@ const getReviewForTime = (reviewArray, requestedAt) => {
   return matching.length < 1 ? null : matching[0];
 }
 
-const reviewsByAuthor = (requestedByReviewer, actualReviews) => actualReviews.reduce((acc, review) => {
+const processReviewsByAuthor = (requestedByReviewer, actualReviews) => actualReviews.reduce((acc, review) => {
   const { author, isOwnPull, submittedAt, commentsCount, ...other } = review;
   const key = author.id;
 
@@ -97,7 +97,7 @@ const removedTime = (removedArray, requestedAt) => !removedArray ? null : remove
 const mergeReviewsWithRequested = (actualReviews, requestedReviewers, endTime) => {
   const requestedByReviewer = requestedReviewsByAuthor(requestedReviewers);
   //core.info(`REDUCED REQUESTED: ${JSON.stringify(requestedByReviewer, null, 2)}`);
-  const reviewsByAuthor = reviewsByAuthor(requestedByReviewer, actualReviews);
+  const reviewsByAuthor = processReviewsByAuthor(requestedByReviewer, actualReviews);
   core.info(`REDUCED REVIEWS: ${JSON.stringify(reviewsByAuthor, null, 2)}`);
 
   const output = requestedByReviewer.reduce((acc, reviewer) => {
