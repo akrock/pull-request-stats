@@ -9546,6 +9546,7 @@ const getChartsData = ({ index, contributions, displayCharts }) => {
   return {
     username: addBr(medal ? String.fromCodePoint(medal) : ''),
     timeStr: addBr(generateChart(contributions.timeToReview)),
+    completedStr: addBr(generateChart(contributions.completedReviews)),
     reviewsStr: addBr(generateChart(contributions.totalReviews)),
     commentsStr: addBr(generateChart(contributions.totalComments)),
   };
@@ -9598,12 +9599,14 @@ module.exports = ({
     const timeVal = printStat(stats, 'timeToReview', durationToString);
     const timeStr = addReviewsTimeLink(timeVal, disableLinks, urls.timeToReview);
     const reviewsStr = printStat(stats, 'totalReviews', noParse);
+    const completedStr = `${printStat(stats, 'completedReviews', noParse)} (${Math.round((stats.completedReviews / stats.totalReviews) * 100.00)}%)`;
     const commentsStr = printStat(stats, 'totalComments', noParse);
 
     return {
       avatar,
       username: `${login}${chartsData.username}`,
       timeToReview: `${timeStr}${chartsData.timeStr}`,
+      completedReviews: `${completedStr}${chartsData.completedStr}`,
       totalReviews: `${reviewsStr}${chartsData.reviewsStr}`,
       totalComments: `${commentsStr}${chartsData.commentsStr}`,
     };
@@ -11860,23 +11863,26 @@ exports.restEndpointMethods = restEndpointMethods;
 const SORT_KEY = {
   TIME: 'timeToReview',
   REVIEWS: 'totalReviews',
+  COMPLETED: 'completedReviews',
   COMMENTS: 'totalComments',
 };
 
 const TITLES = {
   avatar: '',
   username: 'User',
-  timeToReview: 'Median time to review',
-  totalReviews: 'Total reviews',
-  totalComments: 'Total comments',
+  timeToReview: 'Median Time To Review',
+  totalReviews: 'Requested Reviews',
+  completedReviews: 'Completed Reviews',
+  totalComments: 'Total Comments',
 };
 
-const COLUMNS_ORDER = ['totalReviews', 'timeToReview', 'totalComments'];
+const COLUMNS_ORDER = ['totalReviews', 'completedReviews', 'timeToReview', 'totalComments'];
 
 const STATS_OPTIMIZATION = {
   totalReviews: 'MAX',
   totalComments: 'MAX',
   commentsPerReview: 'MAX',
+  completedReviews: 'MAX',
   timeToReview: 'MIN',
 };
 

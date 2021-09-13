@@ -28,6 +28,7 @@ const getChartsData = ({ index, contributions, displayCharts }) => {
   return {
     username: addBr(medal ? String.fromCodePoint(medal) : ''),
     timeStr: addBr(generateChart(contributions.timeToReview)),
+    completedStr: addBr(generateChart(contributions.completedReviews)),
     reviewsStr: addBr(generateChart(contributions.totalReviews)),
     commentsStr: addBr(generateChart(contributions.totalComments)),
   };
@@ -80,12 +81,14 @@ module.exports = ({
     const timeVal = printStat(stats, 'timeToReview', durationToString);
     const timeStr = addReviewsTimeLink(timeVal, disableLinks, urls.timeToReview);
     const reviewsStr = printStat(stats, 'totalReviews', noParse);
+    const completedStr = `${printStat(stats, 'completedReviews', noParse)} (${Math.round((stats.completedReviews / stats.totalReviews) * 100.00)}%)`;
     const commentsStr = printStat(stats, 'totalComments', noParse);
 
     return {
       avatar,
       username: `${login}${chartsData.username}`,
       timeToReview: `${timeStr}${chartsData.timeStr}`,
+      completedReviews: `${completedStr}${chartsData.completedStr}`,
       totalReviews: `${reviewsStr}${chartsData.reviewsStr}`,
       totalComments: `${commentsStr}${chartsData.commentsStr}`,
     };
