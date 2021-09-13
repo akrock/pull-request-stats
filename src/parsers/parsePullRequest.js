@@ -72,7 +72,6 @@ const processReviewsByAuthor = (requestedByReviewer, actualReviews) => actualRev
 
   const existingArray = acc[key];
   let reviewToUpdate = getReviewForTime(existingArray, requestedAt);
-  matching.length < 1 ? null : matching[0];
   if (!reviewToUpdate) {
     reviewToUpdate = { author, isOwnPull, submittedAt, requestedAt, commentsCount }
     acc[key].push(reviewToUpdate);
