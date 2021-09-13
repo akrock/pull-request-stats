@@ -117,7 +117,7 @@ const mergeReviewsWithRequested = (actualReviews, requestedReviewers, endTime) =
       const reviewFound = getReviewForTime(reviewArray, requestedAt);
       if (reviewFound) {
         acc.push({
-          timeToReview: reviewFound.completedAt - requestedAt,
+          timeToReview: reviewFound.submittedAt - requestedAt,
           requested: 1,
           completed: 1,
           ...reviewFound
@@ -125,6 +125,7 @@ const mergeReviewsWithRequested = (actualReviews, requestedReviewers, endTime) =
       } else {
         completedAt = completedAt || endTime;
         acc.push({
+          author: user,
           timeToReview: completedAt - requestedAt,
           requested: 1,
           completed: 0,
