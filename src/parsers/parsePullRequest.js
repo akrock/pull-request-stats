@@ -2,6 +2,7 @@ const get = require('lodash.get');
 const parseUser = require('./parseUser');
 const parseReview = require('./parseReview');
 const core = require('@actions/core');
+const { request } = require('../../dist');
 
 const filterNullAuthor = ({ author }) => !!author;
 
@@ -20,69 +21,117 @@ const requestedReviewsByAuthor = (requestedReviewers) => requestedReviewers.redu
     const requestedArray = prevValue.requested;
     const removedArray = prevValue.removed;
 
-    if(removed) {
+    if (removed) {
       removedArray.push(time);
     } else {
       requestedArray.push(time);
     }
 
-    acc[key] = { user, requested: requestedArray, removed: removedArray};
+    acc[key] = { user, requested: requestedArray, removed: removedArray };
   }
   return acc;
 }, {});
 
-const mergeReviewsWithRequested = (actualReviews, requestedReviewers) => {
-  actualReviews = actualReviews || [];
-  requestedReviewers = requestedReviewers || [];
+const getReviewForTime = (reviewArray, requestedAt) => {
+  if (!reviewArray) {
+    return null;
+  }
 
-  const requestedByReviewer = requestedReviewsByAuthor(requestedReviewers);
+  const matching = reviewArray.filter(r => r.requestedAt == requestedAt);
+  return matching.length < 1 ? null : matching[0];
+}
 
-  core.info(`REDUCED REQUESTED: ${JSON.stringify(requestedByReviewer, null, 2)}`);
+const reviewsByAuthor = (requestedByReviewer, actualReviews) => actualReviews.reduce((acc, review) => {
+  const { author, isOwnPull, submittedAt, commentsCount, ...other } = review;
+  const key = author.id;
 
-  const reviewsByAuthor = actualReviews.reduce((acc, review)  => {
-    const { author, isOwnPull, submittedAt, commentsCount, ...other } = review;
-    const key = author.id;
-    
-    var requestInfo = requestedByReviewer[key];
-    if(!requestInfo) {
-      // This was an unsolicited review...
-      // should we count this?
-      return acc;
-    }
-
-    // which request should this be applied to?
-    const requestedAt = requestInfo.requested.reduce((output, t) => {
-      if(t <= submittedAt) {
-        return t;
-      }
-
-      return output;
-    }, null);
-
-    if(requestedAt == null) {
-      // This was an unrequested review...
-      return acc;
-    }
-
-    if(!acc[key]) {
-      acc[key] = []
-    }
-
-    const existingArray = acc[key];
-    const matching = existingArray.filter( r => r.requestedAt == requestedAt);
-    let reviewToUpdate = matching.length < 1 ? null : matching[0];
-    if(!reviewToUpdate) {
-      reviewToUpdate = { author, isOwnPull, submittedAt, requestedAt, commentsCount }
-      acc[key].push(reviewToUpdate);
-    }
-    else {
-      reviewToUpdate.commentsCount += commentsCount;
-    }
-
+  var requestInfo = requestedByReviewer[key];
+  if (!requestInfo) {
+    // This was an unsolicited review...
+    // should we count this?
     return acc;
-  }, {});
+  }
 
+  // which request should this be applied to?
+  const requestedAt = requestInfo.requested.reduce((output, t) => {
+    if (t <= submittedAt) {
+      return t;
+    }
+
+    return output;
+  }, null);
+
+  if (requestedAt == null) {
+    // This was an unrequested review...
+    return acc;
+  }
+
+  if (!acc[key]) {
+    acc[key] = []
+  }
+
+  const existingArray = acc[key];
+  let reviewToUpdate = getReviewForTime(existingArray, requestedAt);
+  matching.length < 1 ? null : matching[0];
+  if (!reviewToUpdate) {
+    reviewToUpdate = { author, isOwnPull, submittedAt, requestedAt, commentsCount }
+    acc[key].push(reviewToUpdate);
+  }
+  else {
+    reviewToUpdate.commentsCount += commentsCount;
+  }
+
+  return acc;
+}, {});
+
+const removedTime = (removedArray, requestedAt) => !removedArray ? null : removedArray.reduce((output, val) => {
+  if (val >= requestedAt) {
+    return val;
+  }
+
+  return output;
+}, null);
+
+
+
+const mergeReviewsWithRequested = (actualReviews, requestedReviewers, endTime) => {
+  const requestedByReviewer = requestedReviewsByAuthor(requestedReviewers);
+  //core.info(`REDUCED REQUESTED: ${JSON.stringify(requestedByReviewer, null, 2)}`);
+  const reviewsByAuthor = reviewsByAuthor(requestedByReviewer, actualReviews);
   core.info(`REDUCED REVIEWS: ${JSON.stringify(reviewsByAuthor, null, 2)}`);
+
+  const output = requestedByReviewer.reduce((acc, reviewer) => {
+    const { user, requested, removed } = reviewer;
+    const reviewArray = reviewsByAuthor[user.id];
+
+    for (let index = 0; index < requested.length; index++) {
+      const requestedAt = requested[index];
+      let completedAt = removedTime(removed, requestedAt);
+
+      const reviewFound = getReviewForTime(reviewArray, requestedAt);
+      if (reviewFound) {
+        acc.push({
+          timeToReview: reviewFound.completedAt - requestedAt,
+          requested: 1,
+          completed: 1,
+          ...reviewFound
+        });
+      } else {
+        completedAt = completedAt || endTime;
+        acc.push({
+          timeToReview: completedAt - requestedAt,
+          requested: 1,
+          completed: 0,
+          isOwnPull: false,
+          commentsCount: 0
+        });
+      }
+    }
+  }, []);
+
+  core.info(`OUTPUT: ${JSON.stringify(output, null, 2)}`);
+
+  return output;
 }
 
 module.exports = (data = {}) => {
@@ -95,7 +144,7 @@ module.exports = (data = {}) => {
   const handleRequestedReview = (r) => {
     let userData = get(r, 'requestedReviewer');
     let removed = false;
-    if(!userData) {
+    if (!userData) {
       removed = true;
       userData = get(r, 'removedReviewer');
     }
@@ -105,7 +154,7 @@ module.exports = (data = {}) => {
 
   const actualReviews = getFilteredReviews(data).map(handleReviews);
   const requestedReviewers = get(data, 'node.timelineItems.nodes', []).map(handleRequestedReview);
-  const finalReviews = mergeReviewsWithRequested(actualReviews, requestedReviewers);
+  const finalReviews = mergeReviewsWithRequested(actualReviews, requestedReviewers, closedAt || mergedAt || now);
 
   return {
     author,
