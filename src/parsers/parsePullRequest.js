@@ -134,6 +134,8 @@ const mergeReviewsWithRequested = (actualReviews, requestedReviewers, endTime) =
         });
       }
     }
+
+    return acc;
   }, []);
 
   core.info(`OUTPUT: ${JSON.stringify(output, null, 2)}`);
