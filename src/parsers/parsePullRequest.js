@@ -95,7 +95,6 @@ const removedTime = (removedArray, requestedAt) => !removedArray ? null : remove
 
 const mergeReviewsWithRequested = (actualReviews, requestedReviewers, endTime) => {
   const requestedByReviewer = requestedReviewsByAuthor(requestedReviewers);
-  // core.info(`REDUCED REQUESTED: ${JSON.stringify(requestedByReviewer, null, 2)}`);
   const reviewsByAuthor = processReviewsByAuthor(requestedByReviewer, actualReviews);
   core.info(`REDUCED REVIEWS: ${JSON.stringify(reviewsByAuthor, null, 2)}`);
 
