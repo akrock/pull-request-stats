@@ -42,7 +42,7 @@ const getReviewForTime = (reviewArray, requestedAt) => {
 }
 
 const processReviewsByAuthor = (requestedByReviewer, actualReviews) => actualReviews.reduce((acc, review) => {
-  const { author, isOwnPull, submittedAt, commentsCount, ...other } = review;
+  const { author, submittedAt, commentsCount, ...other } = review;
   const key = author.id;
 
   var requestInfo = requestedByReviewer[key];
@@ -73,7 +73,7 @@ const processReviewsByAuthor = (requestedByReviewer, actualReviews) => actualRev
   const existingArray = acc[key];
   let reviewToUpdate = getReviewForTime(existingArray, requestedAt);
   if (!reviewToUpdate) {
-    reviewToUpdate = { author, isOwnPull, submittedAt, requestedAt, commentsCount }
+    reviewToUpdate = { author, isOwnPull, submittedAt, requestedAt, commentsCount, ...other }
     acc[key].push(reviewToUpdate);
   }
   else {
@@ -126,6 +126,7 @@ const mergeReviewsWithRequested = (actualReviews, requestedReviewers, endTime) =
         completedAt = completedAt || endTime;
         acc.push({
           author: user,
+          id: 'FAILED_TO_REVIEW',
           timeToReview: completedAt - requestedAt,
           requested: 1,
           completed: 0,
@@ -170,7 +171,7 @@ module.exports = (data = {}) => {
     publishedAt,
     cursor: data.cursor,
     id: get(data, 'node.id'),
-    reviews: actualReviews,
-    ignoredBy: requestedReviewers
+    reviews: finalReviews,
+    //ignoredBy: requestedReviewers
   };
 };
